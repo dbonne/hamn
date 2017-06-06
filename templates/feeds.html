@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h1>Feeds</h1>
+<p>
+The following list contains all feeds aggregated at this site.
+</p>
+
+<ul>
+{% for feed in feeds %}
+ <li><a href="{{feed.feedurl}}"><img src="{% static 'img/feed-icon-14x14.png' %}" alt="RSS"/></a> {%if feed.blogurl %}<a href="{{feed.blogurl}}">{{feed.name}}</a>{%else%}{{feed.name}}{%endif%}</li>
+{% endfor %}
+</ul>
+
+<h2>Teams</h2>
+<ul>
+{% for team in teams %}
+ <li><a href="{{team.teamurl}}">{{team.name}}</a>
+  <ul>
+{%for feed in team.blog_set.all%}
+   <li><a href="{{feed.feedurl}}"><img src="{% static 'img/feed-icon-14x14.png' %}" alt="RSS"/></a> {%if feed.blogurl %}<a href="{{feed.blogurl}}">{{feed.name}}</a>{%else%}{{feed.name}}{%endif%}</li>
+{% endfor %}
+  </ul>
+ </li>
+{% endfor %}
+</ul>
+{% endblock %}

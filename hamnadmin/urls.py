@@ -14,15 +14,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.views.generic import TemplateView
 
 import hamnadmin.register.views as register_views
 
 urlpatterns = [
-    url(r'^$', register_views.planet_home),
+    url(r'^$', register_views.planet_home, name='planet_home'),
+    url(r'^add.html/$', TemplateView.as_view(template_name="add.html")),
+    url(r'^feeds.html$', register_views.planet_feeds, name='planet_feeds'),
     url(r'^admin/', admin.site.urls),
+
+    url(r'^register/', include('hamnadmin.register.urls')),
 ]
 
 if settings.DEBUG is True:

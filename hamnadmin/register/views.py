@@ -21,3 +21,10 @@ def planet_home(request):
         'topposters': topposters,
         'topteams': topteams,
     })
+
+
+def planet_feeds(request):
+    return render_to_response('feeds.html', {
+        'feeds': Blog.objects.filter(approved=True, archived=False),
+        'teams': Team.objects.filter(blog__approved=True).distinct().order_by('name'),
+    })

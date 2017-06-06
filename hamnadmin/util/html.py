@@ -5,10 +5,8 @@ from bs4 import BeautifulSoup
 
 
 def TruncateAndClean(txt):
-    # First apply Tidy
-    markup = str(BeautifulSoup(txt.encode('utf-8')))
-    # txt = markup.
-    # txt = str(tidy.parseString(txt.encode('utf-8'), **_tidyopts))
+    # First apply BeautifulSoup
+    markup = str(BeautifulSoup(txt.encode('utf-8'), "html.parser"))
 
     # Then truncate as necessary
     ht = HtmlTruncator(2048)
