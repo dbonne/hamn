@@ -1,29 +1,19 @@
-import urllib
+from html.parser import HTMLParser
+from urllib.parse import quote
 
-#import tidy
-from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
-
-_tidyopts = dict(drop_proprietary_attributes=1,
-                 alt_text='',
-                 hide_comments=1,
-                 output_xhtml=1,
-                 show_body_only=1,
-                 clean=1,
-                 char_encoding='utf8',
-                 )
 
 
 def TruncateAndClean(txt):
     # First apply Tidy
-    markup = BeautifulSoup(txt.encode('utf-8'))
+    markup = str(BeautifulSoup(txt.encode('utf-8')))
     # txt = markup.
     # txt = str(tidy.parseString(txt.encode('utf-8'), **_tidyopts))
 
     # Then truncate as necessary
     ht = HtmlTruncator(2048)
     ht.feed(txt)
-    out = ht.GetText()
+    out = ht.gettext()
 
     # Remove initial <br /> tags
     while out.startswith('<br'):
@@ -56,7 +46,7 @@ class HtmlTruncator(HTMLParser):
         if len(p) < 2:
             # Don't crash on invalid URLs
             return ""
-        return p[0] + ":" + urllib.quote(p[1])
+        return p[0] + ":" + quote(p[1])
 
     def cleanhref(self, attrs):
         if attrs[0] == 'href':
@@ -97,7 +87,7 @@ class HtmlTruncator(HTMLParser):
             # Finally, append the continuation chars
             self.trunctxt += "[...]"
 
-    def GetText(self):
+    def gettext(self):
         if self.len > self.maxlen:
             return self.trunctxt
         else:
