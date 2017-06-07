@@ -31,7 +31,7 @@ SECRET_KEY = 'h%r#24m5kyxc!_#!g^qw5g2s=%#d+kdg%uz7ug&w_nl1f44nag'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 LOGIN_URL = '/register/login'
 
@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -57,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'hamnadmin.urls'
@@ -87,6 +85,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'planetbeta',
+        'USER': 'admin'
     }
 }
 
@@ -108,6 +107,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'hamnadmin.auth.AuthBackend'
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
@@ -115,7 +118,7 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'GMT'
 
-USE_I18N = True
+USE_I18N = False
 
 USE_L10N = True
 
@@ -127,7 +130,7 @@ VARNISH_URL = "http://localhost/varnish-purge"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/media/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "www"),
 ]

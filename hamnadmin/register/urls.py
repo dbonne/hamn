@@ -1,5 +1,6 @@
 from django.conf.urls import url
 
+from hamnadmin import auth as auth_views
 from . import views
 
 app_name = 'register'
@@ -18,5 +19,9 @@ urlpatterns = [
     url(r'^moderate/$', views.moderate, name='moderate'),
     url(r'^moderate/reject/(\d+)/$', views.moderate_reject, name='reject'),
     url(r'^moderate/approve/(\d+)/$', views.moderate_approve, name='approve'),
+
+    url(r'^login/$', auth_views.login),
+    url(r'^auth_receive/$', auth_views.auth_receive),
+    url(r'^logout/$', auth_views.logout),
 
 ]
