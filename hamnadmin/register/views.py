@@ -13,7 +13,7 @@ from django.utils.datetime_safe import datetime
 from hamnadmin.mailqueue.util import send_simple_mail
 from hamnadmin.util.varnish import purge_root_and_feeds, purge_url
 from .forms import BlogEditForm
-from .models import Post, Blog, Team, AggregatorLog
+from .models import Post, Blog, Team, AggregatorLog, AuditEntry
 
 
 def planet_home(request):
@@ -213,3 +213,35 @@ def remove_from_team(request, teamid, blogid):
 
     messages.info(request, "Blog {0} removed from team {1}".format(blog.feedurl, team.name))
     return HttpResponseRedirect(reverse('register:root'))
+
+
+def __getvalidblogpost(request, blogid, postid):
+    blog = get_object_or_404(Blog, id=blogid)
+    post = get_object_or_404(Post, id=postid)
+    if not blog.user == request.user and not request.user.is_superuser:
+        raise Exception("You can't view/edit somebody elses blog!")
+    if not post.feed.id == blog.id:
+        raise Exception("Blog does not match post")
+    return post
+
+
+def __setposthide(request, blogid, postid, status):
+    post = __getvalidblogpost(request, blogid, postid)
+    post.hidden = status
+    post.save()
+    AuditEntry(request.user.username, 'Set post %s on blog %s visibility to %s' % (postid, blogid, status)).save()
+    messages.info(request, 'Set post "%s" to %s' % (post.title, status and "hidden" or "visible"), extra_tags="top")
+    purge_root_and_feeds()
+    return HttpResponseRedirect(reverse('register:edit', args=(blogid,)))
+
+
+@login_required
+@transaction.atomic
+def blogpost_hide(request, blogid, postid):
+    return __setposthide(request, blogid, postid, True)
+
+
+@login_required
+@transaction.atomic
+def blogpost_unhide(request, blogid, postid):
+    return __setposthide(request, blogid, postid, False)

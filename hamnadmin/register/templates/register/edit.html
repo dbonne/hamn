@@ -60,9 +60,9 @@
                     <td>
                         {% if p.hidden %}
                             <a class="btn btn-default btn-sm"
-                               href="/register/blogposts/{{ blog.id }}/unhide/{{ p.id }}/">Unhide</a>
+                               href="{% url 'register:unhide' blog.id p.id %}">Unhide</a>
                         {% else %}
-                            <a class="btn btn-default btn-sm" href="/register/blogposts/{{ blog.id }}/hide/{{ p.id }}/">Hide</a>
+                            <a class="btn btn-default btn-sm" href="{% url 'register:hide' blog.id p.id %}">Hide</a>
                         {% endif %}
                         <a class="btn btn-default btn-sm" onClick="confirmDelete({{ blog.id }},{{ p.id }})">Delete/reload</a>
                     </td>
