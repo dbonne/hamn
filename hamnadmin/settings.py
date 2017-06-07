@@ -38,8 +38,8 @@ LOGIN_URL = '/register/login'
 # Application definition
 
 INSTALLED_APPS = [
-    'hamnadmin.register.apps.RegisterConfig',
-    'hamnadmin.mailqueue.apps.MailqueueConfig',
+    'hamnadmin.register',
+    'hamnadmin.mailqueue',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -123,7 +123,7 @@ def edit(request, id=None):
                                                                 obj.team.manager.last_name),
                                  )
 
-            return HttpResponseRedirect(reverse('register:edit', args=(obj.id)))
+            return HttpResponseRedirect(reverse('register:edit', args=(obj.id,)))
     else:
         form = BlogEditForm(request, instance=blog)
 
