@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.shortcuts import render_to_response
 # Public planet
@@ -27,4 +29,17 @@ def planet_feeds(request):
     return render_to_response('feeds.html', {
         'feeds': Blog.objects.filter(approved=True, archived=False),
         'teams': Team.objects.filter(blog__approved=True).distinct().order_by('name'),
+    })
+
+
+@login_required
+def root(request):
+    if request.user.is_superuser and 'admin' in request.GET and request.GET['admin'] == '1':
+        blogs = Blog.objects.all().order_by('archived', 'approved', 'name')
+    else:
+        blogs = Blog.objects.filter(user=request.user).order_by('archived', 'approved', 'name')
+    return render_to_response('register/index.html', {
+        'blogs': blogs,
+        'teams': Team.objects.filter(manager=request.user).order_by('name'),
+        'title': 'Your blogs',
     })

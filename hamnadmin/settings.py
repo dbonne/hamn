@@ -33,6 +33,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = []
 
+LOGIN_URL = '/register/login'
+
 # Application definition
 
 INSTALLED_APPS = [
