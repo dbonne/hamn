@@ -1,0 +1,29 @@
+from django.conf import settings
+
+DEBUG = True
+
+LOGIN_URL = '/register/admin/login'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend'
+]
+
+# Database
+# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'planetbeta',
+    }
+}
+
+settings.INSTALLED_APPS += ['debug_toolbar', ]
+settings.MIDDLEWARE += [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+INTERNAL_IPS = ['127.0.0.1', ]
+
+PGAUTH_REDIRECT = '...'
+PGAUTH_KEY = '...'
+
+VARNISH_URL = None
