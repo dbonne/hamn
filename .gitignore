@@ -2,3 +2,6 @@
 planet.ini
 www/*.html
 www/*.xml
+
+# Pycharm folder
+.idea/
