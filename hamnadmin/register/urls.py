@@ -13,4 +13,5 @@ urlpatterns = [
 
     url(r'^blogposts/(\d+)/hide/(\d+)/$', views.blogpost_hide, name='hide'),
     url(r'^blogposts/(\d+)/unhide/(\d+)/$', views.blogpost_unhide, name='unhide'),
+    url(r'^blogposts/(\d+)/delete/(\d+)/$', views.blogpost_delete, name='delete'),
 ]

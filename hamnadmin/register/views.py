@@ -245,3 +245,22 @@ def blogpost_hide(request, blogid, postid):
 @transaction.atomic
 def blogpost_unhide(request, blogid, postid):
     return __setposthide(request, blogid, postid, False)
+
+
+@login_required
+@transaction.atomic
+def blogpost_delete(request, blogid, postid):
+    post = __getvalidblogpost(request, blogid, postid)
+    title = post.title
+
+    # Update the feed last fetched date to be just before this entry, so that we end up
+    # re-fetching it if necessary.
+    post.feed.lastget = post.dat - timedelta(minutes=1)
+    post.feed.save()
+
+    # Now actually delete it
+    post.delete()
+    AuditEntry(request.user.username, 'Deleted post %s from blog %s' % (postid, blogid)).save()
+    messages.info(request, 'Deleted post "%s". It will be reloaded on the next scheduled crawl.' % title)
+    purge_root_and_feeds()
+    return HttpResponseRedirect(reverse('register:edit', args=(blogid,)))
