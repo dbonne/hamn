@@ -20,11 +20,13 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 
 import hamnadmin.register.views as register_views
+from hamnadmin.register.feeds import PostFeed
 
 urlpatterns = [
     url(r'^$', register_views.planet_home, name='planet_home'),
     url(r'^add.html/$', TemplateView.as_view(template_name="add.html")),
     url(r'^feeds.html$', register_views.planet_feeds, name='planet_feeds'),
+    url(r'^rss20(?P<type>_short)?\.xml$', PostFeed()),
 
     url(r'^register/admin/', admin.site.urls),
     url(r'^register/', include('hamnadmin.register.urls')),
