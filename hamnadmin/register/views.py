@@ -2,9 +2,9 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Max
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -12,7 +12,7 @@ from django.utils.datetime_safe import datetime
 
 from hamnadmin.mailqueue.util import send_simple_mail
 from hamnadmin.util.varnish import purge_root_and_feeds, purge_url
-from .forms import BlogEditForm
+from .forms import BlogEditForm, ModerateRejectForm
 from .models import Post, Blog, Team, AggregatorLog, AuditEntry
 
 
@@ -37,6 +37,11 @@ def planet_feeds(request):
         'feeds': Blog.objects.filter(approved=True, archived=False),
         'teams': Team.objects.filter(blog__approved=True).distinct().order_by('name'),
     })
+
+
+# Registration interface (login and all)
+def issuperuser(user):
+    return user.is_authenticated() and user.is_superuser
 
 
 @login_required
@@ -95,7 +100,7 @@ def edit(request, id=None):
                         purge_root_and_feeds()
                         purge_url('/feeds.html')
 
-                        return HttpResponseRedirect(reverse('registration:edit', args=(obj.id,)))
+                        return HttpResponseRedirect(reverse('register:edit', args=(obj.id,)))
 
             obj = form.save()
 
@@ -118,7 +123,7 @@ def edit(request, id=None):
                                                                 obj.team.manager.last_name),
                                  )
 
-            return HttpResponseRedirect("/register/edit/{0}/".format(obj.id))
+            return HttpResponseRedirect(reverse('register:edit', args=(obj.id)))
     else:
         form = BlogEditForm(request, instance=blog)
 
@@ -264,3 +269,102 @@ def blogpost_delete(request, blogid, postid):
     messages.info(request, 'Deleted post "%s". It will be reloaded on the next scheduled crawl.' % title)
     purge_root_and_feeds()
     return HttpResponseRedirect(reverse('register:edit', args=(blogid,)))
+
+
+# Moderation
+@login_required
+@user_passes_test(issuperuser)
+def moderate(request):
+    return render(request, 'register/moderate.html', {
+        'blogs': Blog.objects.filter(approved=False).annotate(oldest=Max('posts__dat')).order_by('oldest'),
+        'title': 'Moderation',
+    })
+
+
+@login_required
+@user_passes_test(issuperuser)
+@transaction.atomic
+def moderate_approve(request, blogid):
+    blog = get_object_or_404(Blog, id=blogid)
+
+    if blog.approved:
+        messages.info(request, u"Blog {0} was already approved.".format(blog.feedurl))
+        return HttpResponseRedirect(reverse('register:moderate'))
+
+    send_simple_mail(settings.EMAIL_SENDER,
+                     settings.NOTIFICATION_RECEIVER,
+                     "A blog was approved on Planet PostgreSQL",
+                     u"The blog at {0} by {1} {2}\nwas marked as approved by {3}.\n\n".format(blog.feedurl,
+                                                                                              blog.user.first_name,
+                                                                                              blog.user.last_name,
+                                                                                              request.user.username),
+                     sendername="Planet PostgreSQL",
+                     receivername="Planet PostgreSQL Moderators",
+                     )
+
+    send_simple_mail(settings.EMAIL_SENDER,
+                     blog.user.email,
+                     "Your blog submission to Planet PostgreSQL",
+                     u"The blog at {0} that you submitted to Planet PostgreSQL has\nbeen approved.\n\n".format(
+                         blog.feedurl),
+                     sendername="Planet PostgreSQL",
+                     receivername=u"{0} {1}".format(blog.user.first_name, blog.user.last_name),
+                     )
+
+    blog.approved = True
+    blog.save()
+
+    AuditEntry(request.user.username, 'Approved blog %s at %s' % (blog.id, blog.feedurl)).save()
+
+    messages.info(request, u"Blog {0} approved, notification sent to moderators and owner.".format(blog.feedurl))
+
+    purge_root_and_feeds()
+    purge_url('/feeds.html')
+
+    return HttpResponseRedirect(reverse('register:moderate'))
+
+
+@login_required
+@user_passes_test(issuperuser)
+@transaction.atomic
+def moderate_reject(request, blogid):
+    blog = get_object_or_404(Blog, id=blogid)
+
+    if request.method == "POST":
+        form = ModerateRejectForm(data=request.POST)
+        if form.is_valid():
+            # Ok, actually reject this blog.
+            # Always send moderator mail
+            send_simple_mail(settings.EMAIL_SENDER,
+                             settings.NOTIFICATION_RECEIVER,
+                             "A blog was rejected on Planet PostgreSQL",
+                             u"The blog at {0} by {1} {2}\nwas marked as rejected by {3}. The message given was:\n\n"
+                             u"{4}\n\n".format(
+                                 blog.feedurl, blog.user.first_name, blog.user.last_name, request.user.username,
+                                 form.cleaned_data['message']),
+                             sendername="Planet PostgreSQL",
+                             receivername="Planet PostgreSQL Moderators",
+                             )
+            messages.info(request, u"Blog {0} rejected, notification sent to moderators".format(blog.feedurl))
+            if not form.cleaned_data['modsonly']:
+                send_simple_mail(settings.EMAIL_SENDER,
+                                 blog.user.email,
+                                 "Your blog submission to Planet PostgreSQL",
+                                 u"The blog at {0} that you submitted to Planet PostgreSQL has\nunfortunately been "
+                                 u"rejected. The reason given was:\n\n{1}\n\n".format(
+                                     blog.feedurl, form.cleaned_data['message']),
+                                 sendername="Planet PostgreSQL",
+                                 receivername=u"{0} {1}".format(blog.user.first_name, blog.user.last_name),
+                                 )
+                messages.info(request, u"Blog {0} rejected, notification sent to blog owner".format(blog.feedurl))
+
+            blog.delete()
+            return HttpResponseRedirect(reverse('register:moderate'))
+    else:
+        form = ModerateRejectForm()
+
+    return render(request, 'register/moderate_reject.html', {
+        'form': form,
+        'blog': blog,
+        'title': 'Reject blog',
+    })

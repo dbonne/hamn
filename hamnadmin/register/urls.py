@@ -14,4 +14,9 @@ urlpatterns = [
     url(r'^blogposts/(\d+)/hide/(\d+)/$', views.blogpost_hide, name='hide'),
     url(r'^blogposts/(\d+)/unhide/(\d+)/$', views.blogpost_unhide, name='unhide'),
     url(r'^blogposts/(\d+)/delete/(\d+)/$', views.blogpost_delete, name='delete'),
+
+    url(r'^moderate/$', views.moderate, name='moderate'),
+    url(r'^moderate/reject/(\d+)/$', views.moderate_reject, name='reject'),
+    url(r'^moderate/approve/(\d+)/$', views.moderate_approve, name='approve'),
+
 ]

@@ -25,8 +25,8 @@ urlpatterns = [
     url(r'^$', register_views.planet_home, name='planet_home'),
     url(r'^add.html/$', TemplateView.as_view(template_name="add.html")),
     url(r'^feeds.html$', register_views.planet_feeds, name='planet_feeds'),
-    url(r'^admin/', admin.site.urls),
 
+    url(r'^register/admin/', admin.site.urls),
     url(r'^register/', include('hamnadmin.register.urls')),
 ]
 
